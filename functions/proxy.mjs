@@ -27,6 +27,9 @@ export default async (req) => {
     return Response.json({ error: { message: "Missing url parameter" } }, { status: 400 });
   }
 
+  // Debug: log what URL we received and what env vars exist
+  const envKeys = Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY') || k.includes('GROQ'));
+
   let apiKey;
   if (url.includes("anthropic.com")) {
     apiKey = process.env.ANTHROPIC_API_KEY;
@@ -37,11 +40,15 @@ export default async (req) => {
   } else if (url.includes("googleapis.com")) {
     apiKey = process.env.GEMINI_API_KEY;
   } else {
-    return Response.json({ error: { message: "Unknown API provider" } }, { status: 400 });
+    return Response.json({ error: { message: `Unknown provider. URL received: ${url}` } }, { status: 400 });
   }
 
   if (!apiKey) {
-    return Response.json({ error: { message: `API key not configured for this provider` } }, { status: 500 });
+    return Response.json({ 
+      error: { 
+        message: `API key not configured. URL: ${url}. Available env keys: ${envKeys.join(', ') || 'none found'}` 
+      } 
+    }, { status: 500 });
   }
 
   try {
